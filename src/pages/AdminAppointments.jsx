@@ -1,4 +1,4 @@
-import { Calendar, Clock, Edit, Eye, Filter, Search, Trash2 } from 'lucide-react';
+import { Calendar, Clock, Edit, Eye, Filter, Search, Trash2,XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
@@ -476,7 +476,7 @@ const AdminAppointments = () => {
 
       {/* Appointment Details Modal */}
       {showModal && selectedAppointment && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900">Appointment Details</h2>
@@ -484,7 +484,7 @@ const AdminAppointments = () => {
                 onClick={() => setShowModal(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
-                <Calendar className="h-6 w-6" />
+                <XCircle className="h-6 w-6" />
               </button>
             </div>
 

@@ -157,7 +157,7 @@ function Dashboard() {
             {/* Header */}
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-                <p className="text-gray-600">{`Welcome to your ${user?.role === 'super_admin' && 'admin'} dashboard`}</p>
+                <p className="text-gray-600">{`Welcome to your ${user?.role === 'super_admin'? 'admin':''} dashboard`}</p>
             </div>
 
             {/* Stats Grid */}
@@ -196,7 +196,7 @@ function Dashboard() {
 
                                 <div className="">
                                     <div className="text-sm font-medium text-gray-900">
-                                        {c.email}
+                                        {c.patient_email}
                                     </div>
                                     <div className="text-sm text-gray-500">
                                         {c.patient_phone}
