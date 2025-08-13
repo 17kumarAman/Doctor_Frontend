@@ -11,7 +11,7 @@ function Dashboard() {
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
-    const { API_BASE_URL } = useAuth();
+    const { API_BASE_URL,user } = useAuth();
 
 
     useEffect(() => {
@@ -157,7 +157,7 @@ function Dashboard() {
             {/* Header */}
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-                <p className="text-gray-600">Welcome to your admin dashboard</p>
+                <p className="text-gray-600">{`Welcome to your ${user?.role === 'super_admin' && 'admin'} dashboard`}</p>
             </div>
 
             {/* Stats Grid */}

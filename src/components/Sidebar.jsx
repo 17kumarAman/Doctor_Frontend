@@ -80,7 +80,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           <div className="p-4 border-b border-gray-200 flex items-center justify-between">
             <div>
               <h1 className="text-xl font-bold text-blue-600">
-                {userType === 'admin' ? 'Admin Panel' : 'Doctor Panel'}
+                {userType === 'super_admin' ? (user?.role === 'super_admin' ? 'Admin Panel' : 'Reception') : 'Doctor Panel'}
               </h1>
               <p className="text-sm text-gray-600 mt-1">
                 Welcome back
