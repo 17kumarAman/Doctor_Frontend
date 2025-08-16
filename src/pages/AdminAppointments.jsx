@@ -1,4 +1,4 @@
-import { Calendar, Clock, Edit, Eye, Filter, Search, Trash2,XCircle } from 'lucide-react';
+import { Calendar, Clock, Edit, Eye, Filter, Search, Trash2, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 const AdminAppointments = () => {
   const { API_BASE_URL } = useAuth();
   const [appointments, setAppointments] = useState([]);
+  const [allAppointments, setAllAppointments] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
@@ -20,39 +21,42 @@ const AdminAppointments = () => {
   const appointmentsPerPage = 5;
 
 
+  // Fetch appointments and doctors only once on mount
   useEffect(() => {
     fetchAppointments();
     fetchDoctors();
-  }, [filter, doctorFilter, dateFilter]);
+  }, []);
+
+  // Filter appointments locally whenever filters/search change
+  useEffect(() => {
+    let filteredAppointments = allAppointments;
+    if (filter !== 'all') {
+      filteredAppointments = filteredAppointments.filter(apt => apt.status === filter);
+    }
+    if (doctorFilter) {
+      filteredAppointments = filteredAppointments.filter(apt => apt.doctor_id == doctorFilter);
+    }
+    if (dateFilter) {
+      filteredAppointments = filteredAppointments.filter(apt => apt.appointment_date === dateFilter);
+    }
+    if (searchTerm) {
+      filteredAppointments = filteredAppointments.filter(apt =>
+        apt.patient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        apt.patient_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        apt.patient_phone?.includes(searchTerm)
+      );
+    }
+    setAppointments(filteredAppointments);
+    setCurrentPage(1); // reset to first page after filter change
+  }, [filter, doctorFilter, dateFilter, searchTerm, allAppointments]);
 
   const fetchAppointments = async () => {
     try {
       setLoading(true);
       const response = await fetch(`${API_BASE_URL}/api/appointments`);
       const data = await response.json();
-
       if (data.status) {
-        let filteredAppointments = data.data;
-
-        if (filter !== 'all') {
-          filteredAppointments = filteredAppointments.filter(apt => apt.status === filter);
-        }
-        if (doctorFilter) {
-          filteredAppointments = filteredAppointments.filter(apt => apt.doctor_id == doctorFilter);
-        }
-        if (dateFilter) {
-          filteredAppointments = filteredAppointments.filter(apt => apt.appointment_date === dateFilter);
-        }
-        if (searchTerm) {
-          filteredAppointments = filteredAppointments.filter(apt =>
-            apt.patient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            apt.patient_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            apt.patient_phone?.includes(searchTerm)
-          );
-        }
-
-        setAppointments(filteredAppointments);
-        setCurrentPage(1); // reset to first page after filter change
+        setAllAppointments(data.data);
       } else {
         toast.error('Failed to fetch appointments');
       }
@@ -83,7 +87,8 @@ const AdminAppointments = () => {
       const data = await response.json();
       if (data.status) {
         toast.success('Appointment deleted successfully');
-        fetchAppointments();
+  fetchAppointments();
+  // fetchAppointments will update allAppointments, which will trigger filtering useEffect
       } else {
         toast.error(data.message || 'Failed to delete appointment');
       }

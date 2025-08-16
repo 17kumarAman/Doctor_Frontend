@@ -5,8 +5,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from "../context/AuthContext";
 
-// const { user } = useAuth()
-
 const initialFormData = {
     full_name: '',
     email: '',
@@ -22,10 +20,11 @@ const initialFormData = {
     available_days: '',
     available_time: '',
     created_by: "1",
+    status: '',
 };
 
 const DoctorForm = () => {
-    const { API_BASE_URL } = useAuth(); 
+    const { API_BASE_URL } = useAuth();
     const [formData, setFormData] = useState(initialFormData);
     const [loading, setLoading] = useState(false);
     const { id } = useParams();
@@ -43,7 +42,14 @@ const DoctorForm = () => {
         try {
             setLoading(true);
             const res = await axios.get(`${API_BASE_URL}/api/doctor/${id}`);
-            setFormData({ ...res.data.data, dob: new Date(res.data.data.dob).toISOString().split('T')[0], password: '' });
+            const doctorData = res.data.data || {};
+
+            setFormData({
+                ...doctorData,
+                dob: doctorData.dob ? new Date(doctorData.dob).toISOString().split('T')[0] : '',
+                password: '',
+                status: doctorData.status || 'Active'
+            });
         } catch (err) {
             toast.error('Failed to load doctor data');
             navigate('/doctors');
@@ -130,8 +136,8 @@ const DoctorForm = () => {
                                     name="full_name"
                                     value={formData.full_name}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     required
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                                 />
                             </div>
 
@@ -144,8 +150,8 @@ const DoctorForm = () => {
                                     name="email"
                                     value={formData.email}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     required
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                                 />
                             </div>
 
@@ -159,8 +165,8 @@ const DoctorForm = () => {
                                         name="password"
                                         value={formData.password}
                                         onChange={handleInputChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        required={!isEdit}
+                                        required
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                                     />
                                 </div>
                             )}
@@ -174,7 +180,7 @@ const DoctorForm = () => {
                                     name="phone"
                                     value={formData.phone}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                                 />
                             </div>
 
@@ -186,7 +192,7 @@ const DoctorForm = () => {
                                     name="gender"
                                     value={formData.gender}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                                 >
                                     <option value="">Select Gender</option>
                                     <option value="Male">Male</option>
@@ -204,9 +210,27 @@ const DoctorForm = () => {
                                     name="dob"
                                     value={formData.dob}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                                 />
                             </div>
+
+                            {/* Doctor Status (only in edit mode) */}
+                            {isEdit && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Status
+                                    </label>
+                                    <select
+                                        name="status"
+                                        value={formData.status}
+                                        onChange={handleInputChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+                                    >
+                                        <option value="Active">Active</option>
+                                        <option value="Inactive">Deactive</option>
+                                    </select>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -223,9 +247,8 @@ const DoctorForm = () => {
                                     name="specialization"
                                     value={formData.specialization}
                                     onChange={handleInputChange}
-                                    placeholder="e.g., Cardiology, Neurology"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     required
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                                 />
                             </div>
 
@@ -238,9 +261,8 @@ const DoctorForm = () => {
                                     name="qualification"
                                     value={formData.qualification}
                                     onChange={handleInputChange}
-                                    placeholder="e.g., MBBS, MD"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     required
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                                 />
                             </div>
 
@@ -255,7 +277,7 @@ const DoctorForm = () => {
                                     onChange={handleInputChange}
                                     min="0"
                                     max="50"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                                 />
                             </div>
 
@@ -270,7 +292,7 @@ const DoctorForm = () => {
                                     onChange={handleInputChange}
                                     min="0"
                                     step="0.01"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                                 />
                             </div>
 
@@ -283,8 +305,7 @@ const DoctorForm = () => {
                                     name="available_days"
                                     value={formData.available_days}
                                     onChange={handleInputChange}
-                                    placeholder="e.g., Monday-Friday"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                                 />
                             </div>
 
@@ -297,8 +318,7 @@ const DoctorForm = () => {
                                     name="available_time"
                                     value={formData.available_time}
                                     onChange={handleInputChange}
-                                    placeholder="e.g., 9:00 AM - 5:00 PM"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
                                 />
                             </div>
                         </div>
@@ -314,8 +334,7 @@ const DoctorForm = () => {
                             value={formData.bio}
                             onChange={handleInputChange}
                             rows={4}
-                            placeholder="Brief description about the doctor"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm resize-none"
                         />
                     </div>
 
@@ -324,15 +343,15 @@ const DoctorForm = () => {
                         <button
                             type="button"
                             onClick={() => navigate('/doctors')}
-                            className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                             disabled={loading}
+                            className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
                         >
                             <Save size={16} />
                             {loading ? 'Saving...' : (isEdit ? 'Update Doctor' : 'Create Doctor')}

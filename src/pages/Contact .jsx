@@ -7,7 +7,7 @@ import { useAuth } from "../context/AuthContext";
 
 function Contact() {
     const { API_BASE_URL } = useAuth();
-    const [formData, setFormData] = useState({ name: "", email: "", subject: "", message: "" });
+    const [formData, setFormData] = useState({ name: "", email: "", phone: "", message: "" });
     const [errors, setErrors] = useState({});
     const [touched, setTouched] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,8 +27,8 @@ function Contact() {
             newErrors.email = "Email is invalid";
         }
 
-        if (!values.subject.trim()) {
-            newErrors.subject = "Subject is required";
+        if (!values.phone.trim()) {
+            newErrors.phone = "Phone is required";
         }
 
         if (!values.message.trim()) {
@@ -65,7 +65,7 @@ function Contact() {
         setTouched({
             name: true,
             email: true,
-            subject: true,
+            phone: true,
             message: true,
         });
 
@@ -78,7 +78,7 @@ function Contact() {
         try {
             await axios.post(`${API_BASE_URL}/api/contact`, formData);
             toast.success("Form submitted successfully!");
-            setFormData({ name: "", email: "", subject: "", message: "" });
+            setFormData({ name: "", email: "", phone: "", message: "" });
             setTouched({});
             setErrors({});
         } catch (err) {
@@ -189,19 +189,20 @@ function Contact() {
                                     {touched.email && errors.email && <p className="text-sm text-red-600 mt-1">{errors.email}</p>}
                                 </div>
 
-                                {/* Subject */}
+                                {/* Phone */}
                                 <div>
-                                    <label className="text-sm font-medium block mb-2 text-slate-900">Subject</label>
+                                    <label className="text-sm font-medium block mb-2 text-slate-900">Phone</label>
                                     <input
-                                        type="text"
-                                        name="subject"
-                                        placeholder="Enter Subject"
-                                        value={formData.subject}
+                                        type="number"
+                                        name="phone"
+                                        maxLength={10}
+                                        placeholder="Enter Phone"
+                                        value={formData.phone}
                                         onChange={handleChange}
                                         onBlur={handleBlur}
-                                        className={`w-full py-2.5 px-4 text-sm bg-gray-100 border ${touched.subject && errors.subject ? 'border-red-500' : 'border-gray-200'} focus:border-slate-900 outline-0`}
+                                        className={`w-full py-2.5 px-4 text-sm bg-gray-100 border ${touched.phone && errors.phone ? 'border-red-500' : 'border-gray-200'} focus:border-slate-900 outline-0`}
                                     />
-                                    {touched.subject && errors.subject && <p className="text-sm text-red-600 mt-1">{errors.subject}</p>}
+                                    {touched.phone && errors.phone && <p className="text-sm text-red-600 mt-1">{errors.phone}</p>}
                                 </div>
 
                                 {/* Message */}

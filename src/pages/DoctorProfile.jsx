@@ -2,6 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const DoctorProfile = () => {
   const { user, setUser, API_BASE_URL } = useAuth();
@@ -11,12 +12,19 @@ const DoctorProfile = () => {
   const [formData, setFormData] = useState({});
   const [isEditing, setIsEditing] = useState(false);
   const [enablePassword, setEnablePassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // 👁 password toggle
 
-  // Fetch Doctor
+  // ✅ Fetch Doctor Data
   const fetchDoctor = async () => {
     try {
       setLoading(true);
       const res = await axios.get(`${API_BASE_URL}/api/doctor/${user.id}`);
+
+      if (!res.data) {
+        toast.error("Invalid response from server");
+        return;
+      }
+
       const data = res.data.data || res.data;
 
       const normalizeDate = (val) =>
@@ -37,8 +45,8 @@ const DoctorProfile = () => {
       setDoctor(normalizedData);
       setFormData(normalizedData);
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch doctor details");
+      console.error("Fetch Doctor Error:", err);
+      toast.error(err.response?.data?.message || "Failed to fetch doctor details");
     } finally {
       setLoading(false);
     }
@@ -48,7 +56,7 @@ const DoctorProfile = () => {
     if (user?.id) fetchDoctor();
   }, [user?.id]);
 
-  // File Upload
+  // ✅ File Upload
   const handleFileUpload = async (file) => {
     const formDataUpload = new FormData();
     formDataUpload.append("image", file);
@@ -68,8 +76,8 @@ const DoctorProfile = () => {
         toast.error("Image upload failed");
       }
     } catch (err) {
-      console.error(err);
-      toast.error("Error uploading image");
+      console.error("Upload Error:", err);
+      toast.error(err.response?.data?.message || "Error uploading image");
     }
   };
 
@@ -78,28 +86,29 @@ const DoctorProfile = () => {
     if (file) handleFileUpload(file);
   };
 
-  // Input Change
+  // ✅ Input Change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Enable Password Editing
+  // ✅ Enable Password Editing
   const handleEnablePassword = () => {
     const confirmChange = window.confirm("Are you sure you want to change your password?");
     if (confirmChange) {
       setEnablePassword(true);
       setFormData((prev) => ({ ...prev, password: "" }));
+      setShowPassword(false);
     }
   };
 
-  // Submit
+  // ✅ Submit Update
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
       setSaving(true);
 
-      // Prepare payload
       const payload = { ...formData };
       if (!enablePassword || !payload.password?.trim()) {
         delete payload.password;
@@ -114,12 +123,10 @@ const DoctorProfile = () => {
       if (res.data?.success) {
         toast.success("Profile updated successfully");
 
-        // Merge old + new data for UI
         const updatedDoctor = { ...doctor, ...payload, password: "" };
         setDoctor(updatedDoctor);
         setFormData(updatedDoctor);
 
-        // Update Auth Context + localStorage
         setUser(updatedDoctor);
         localStorage.setItem("doctor", JSON.stringify(updatedDoctor));
 
@@ -129,18 +136,19 @@ const DoctorProfile = () => {
         toast.error(res.data?.message || "Failed to update profile");
       }
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to update profile");
+      console.error("Update Error:", err);
+      toast.error(err.response?.data?.message || "Failed to update profile");
     } finally {
       setSaving(false);
     }
   };
 
-  // Cancel Edit
+  // ✅ Cancel Edit
   const handleCancel = () => {
     setFormData(doctor);
     setIsEditing(false);
     setEnablePassword(false);
+    setShowPassword(false);
   };
 
   if (loading) {
@@ -200,7 +208,7 @@ const DoctorProfile = () => {
         )}
       </div>
 
-      {/* Doctor Details */}
+      {/* View Mode */}
       {!isEditing && (
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white rounded-2xl shadow p-4 sm:p-6">
           {[
@@ -264,18 +272,27 @@ const DoctorProfile = () => {
             <input type="file" onChange={handleFileChange} />
           </div>
 
-          {/* Password with Optional Change */}
+          {/* Password */}
           <div className="sm:col-span-2">
             <label className="block mb-1 text-gray-700 font-medium">Password</label>
-            <div className="flex gap-3 items-center">
+            <div className="flex gap-3 items-center relative">
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 name="password"
                 value={formData.password || ""}
                 onChange={handleChange}
                 disabled={!enablePassword}
                 className="flex-1 border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-400 disabled:bg-gray-100"
               />
+              {enablePassword && (
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-12 text-gray-500 hover:text-gray-700"
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              )}
               {!enablePassword && (
                 <button
                   type="button"
