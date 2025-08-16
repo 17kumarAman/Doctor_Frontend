@@ -96,7 +96,7 @@ const Enquiries = () => {
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                {['Name', 'Email', 'Subject', 'Message', 'Date'].map((heading) => (
+                {['Name', 'Email', 'Phone', 'Message', 'Date'].map((heading) => (
                   <th
                     key={heading}
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -131,14 +131,14 @@ const Enquiries = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">{contact.email}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{contact.subject}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{contact.phone}</td>
                     <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate" title={contact.message}>
                       {contact.message}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       <div className="flex items-center">
                         <Calendar size={14} className="mr-1" />
-                        {formatDate(contact.createdAt)}
+                        {formatDate(contact.created_at)}
                       </div>
                     </td>
                   </tr>

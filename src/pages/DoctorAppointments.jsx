@@ -1,4 +1,4 @@
-import { Calendar, CheckCircle, Eye, XCircle } from 'lucide-react';
+import { Calendar, CheckCircle, Eye, Search, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
@@ -6,6 +6,8 @@ import { useAuth } from '../context/AuthContext';
 const DoctorAppointments = () => {
   const { user, API_BASE_URL } = useAuth();
   const [appointments, setAppointments] = useState([]);
+  const [allAppointments, setAllAppointments] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -16,42 +18,49 @@ const DoctorAppointments = () => {
   const [appointmentsPerPage] = useState(5);
 
 
+  // Fetch appointments only once on mount
   useEffect(() => {
     if (user?.id) {
       fetchAppointments();
     }
-  }, [user, filter, dateFilter, currentPage]);
+  }, [user]);
+
+  // Filter appointments locally whenever filters/search change
+  useEffect(() => {
+    let filteredAppointments = allAppointments;
+    if (filter !== 'all') {
+      filteredAppointments = filteredAppointments.filter(
+        apt => (apt?.status || '').toLowerCase() === filter.toLowerCase()
+      );
+    }
+    if (dateFilter) {
+      filteredAppointments = filteredAppointments.filter(apt => {
+        if (!apt?.appointment_date) return false;
+        const aptDate = apt.appointment_date.slice(0, 10);
+        return aptDate === dateFilter;
+      });
+    }
+    if (searchTerm) {
+      filteredAppointments = filteredAppointments.filter(apt =>
+        (apt?.patient_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (apt?.patient_email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (apt?.patient_phone || '').includes(searchTerm)
+      );
+    }
+    setAppointments(filteredAppointments);
+    setCurrentPage(1); // reset to first page after filter/search change
+  }, [filter, dateFilter, searchTerm, allAppointments]);
 
   const fetchAppointments = async () => {
     try {
       setLoading(true);
       const res = await fetch(`${API_BASE_URL}/api/appointments/doctor/${user?.id}`);
-
       if (!res.ok) {
         throw new Error(`Server responded with ${res.status}`);
       }
-
       const data = await res.json();
-
       if (data?.status) {
-        let filteredAppointments = data?.data || [];
-
-        if (filter !== 'all') {
-          filteredAppointments = filteredAppointments.filter(
-            apt => (apt?.status || '').toLowerCase() === filter.toLowerCase()
-          );
-        }
-
-        if (dateFilter) {
-          filteredAppointments = filteredAppointments.filter(apt => {
-            if (!apt?.appointment_date) return false;
-            // Extract YYYY-MM-DD directly from original ISO string to avoid timezone shift
-            const aptDate = apt.appointment_date.slice(0, 10);
-            return aptDate === dateFilter;
-          });
-        }
-
-        setAppointments(filteredAppointments);
+        setAllAppointments(data?.data || []);
       } else {
         toast.error(data?.message || 'Failed to fetch appointments');
       }
@@ -65,7 +74,7 @@ const DoctorAppointments = () => {
 
   const updateAppointmentStatus = async (appointmentId, status) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/appointments/${appointmentId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/appointments/${appointmentId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
@@ -166,8 +175,19 @@ const DoctorAppointments = () => {
           />
         </div>
 
+        <div className="flex items-center space-x-2">
+          <Search className="h-4 w-4 text-gray-500" />
+          <input
+            type="text"
+            placeholder="Search patients..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
         <button
-          onClick={() => { setFilter('all'); setDateFilter(''); }}
+          onClick={() => { setFilter('all'); setDateFilter(''); setSearchTerm(''); }}
           className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
         >
           Clear Filters
@@ -184,6 +204,8 @@ const DoctorAppointments = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Patient</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
+
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
@@ -213,6 +235,11 @@ const DoctorAppointments = () => {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {formatTime(apt?.appointment_time)}
+                    </td>
+                    <td className="px-6 py-4">
+                      {apt?.patient_age && `${apt?.patient_age} years`}
+                      {/* <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(apt?.status)}`}>
+                      </span> */}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(apt?.status)}`}>

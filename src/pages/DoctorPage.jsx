@@ -1,9 +1,9 @@
 import axios from "axios";
-import { useAuth } from "../context/AuthContext";
 import { Edit, Plus, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useAuth } from "../context/AuthContext";
 
 const DoctorPage = () => {
   const { API_BASE_URL } = useAuth();
@@ -11,6 +11,7 @@ const DoctorPage = () => {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
   const doctorsPerPage = 5;
@@ -46,13 +47,18 @@ const DoctorPage = () => {
     navigate(`/doctors/edit/${doctor.id}`);
   };
 
-  const filteredDoctors = doctors.filter((doc) =>
-    [doc.full_name, doc.email, doc.specialization, doc.phone, doc.status]
-      .filter(Boolean)
-      .some((field) =>
-        field.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-  );
+  const filteredDoctors = doctors
+    .filter((doc) => {
+      if (!statusFilter) return true;
+      return doc.status === statusFilter;
+    })
+    .filter((doc) =>
+      [doc.full_name, doc.email, doc.specialization, doc.phone, doc.status]
+        .filter(Boolean)
+        .some((field) =>
+          field.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+    );
 
   const indexOfLastDoctor = currentPage * doctorsPerPage;
   const indexOfFirstDoctor = indexOfLastDoctor - doctorsPerPage;
@@ -75,24 +81,35 @@ const DoctorPage = () => {
         </button>
       </div>
 
-      {/* Search & Count */}
+      {/* Search, Filter & Count */}
       <div className="bg-white rounded-lg shadow p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-          <div className="relative flex-1 max-w-md w-full">
-            <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              size={20}
-            />
-            <input
-              type="text"
-              placeholder="Search doctors..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+          <div className="flex flex-col sm:flex-row gap-2 flex-1">
+            <div className="relative flex-1 max-w-md w-full">
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={20}
+              />
+              <input
+                type="text"
+                placeholder="Search doctors..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <select
+              value={statusFilter}
+              onChange={e => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[120px]"
+            >
+              <option value="">All Status</option>
+              <option value="Active">Active</option>
+              <option value="Inactive">Deactivated</option>
+            </select>
           </div>
           <div className="text-sm text-gray-600">
             {filteredDoctors.length} of {doctors.length} doctors
@@ -162,13 +179,12 @@ const DoctorPage = () => {
                     <td className="px-4 py-4 whitespace-nowrap">{doctor.phone}</td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          doctor.status === "Active"
+                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${doctor.status === "Active"
                             ? "bg-green-100 text-green-800"
                             : "bg-red-100 text-red-800"
-                        }`}
+                          }`}
                       >
-                        {doctor.status}
+                        {doctor?.status === "Active" ? "Active" : "Deactivated"}
                       </span>
                     </td>
                     {/* Action icons directly visible */}
@@ -209,11 +225,10 @@ const DoctorPage = () => {
               <button
                 key={idx}
                 onClick={() => setCurrentPage(idx + 1)}
-                className={`px-3 py-2 text-sm font-medium rounded-md ${
-                  currentPage === idx + 1
+                className={`px-3 py-2 text-sm font-medium rounded-md ${currentPage === idx + 1
                     ? "bg-blue-600 text-white"
                     : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 {idx + 1}
               </button>

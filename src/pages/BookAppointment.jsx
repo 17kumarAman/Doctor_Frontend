@@ -1,4 +1,3 @@
-import { ArrowLeft, Calendar, Clock, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -16,6 +15,7 @@ const BookAppointment = () => {
     patient_name: '',
     patient_email: '',
     patient_phone: '',
+    patient_age: '',
     appointment_date: '',
     appointment_time: '',
     reason: ''
@@ -94,43 +94,59 @@ const BookAppointment = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation
+    // Validation: all fields required
     if (!selectedDoctor) {
       toast.error('Please select a doctor');
       return;
     }
-
     if (!formData.patient_name.trim()) {
       toast.error('Please enter patient name');
       return;
     }
-
+    if (!formData.patient_age) {
+      toast.error('Please select age');
+      return;
+    }
+    if (!formData.patient_phone.trim()) {
+      toast.error('Please enter mobile number');
+      return;
+    }
+    if (!formData.patient_email.trim()) {
+      toast.error('Please enter email');
+      return;
+    }
     if (!formData.appointment_date) {
       toast.error('Please select appointment date');
       return;
     }
-
     if (!formData.appointment_time) {
       toast.error('Please select appointment time');
+      return;
+    }
+    if (!formData.reason.trim()) {
+      toast.error('Please enter message');
       return;
     }
 
     try {
       setLoading(true);
+      const payload = {
+        patient_name: formData.patient_name,
+        patient_age: formData.patient_age,
+        patient_email: formData.patient_email,
+        patient_phone: formData.patient_phone,
+        doctor_id: selectedDoctor.id,
+        appointment_date: formData.appointment_date,
+        appointment_time: formData.appointment_time,
+        reason: formData.reason,
+        status: 'Pending'
+      };
       const response = await fetch(`${API_BASE_URL}/api/book`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          patient_name: formData.patient_name,
-          patient_email: formData.patient_email || null,
-          patient_phone: formData.patient_phone || null,
-          doctor_id: selectedDoctor.id,
-          appointment_date: formData.appointment_date,
-          appointment_time: formData.appointment_time,
-          reason: formData.reason || null
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -140,6 +156,7 @@ const BookAppointment = () => {
         // Clear form
         setFormData({
           patient_name: '',
+          patient_age: '',
           patient_email: '',
           patient_phone: '',
           appointment_date: '',
@@ -184,282 +201,189 @@ const BookAppointment = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        {/* Header */}
-        <div className="mb-6">
-          <button
-            onClick={() => navigate('/contact-us')}
-            className="flex items-center text-blue-600 hover:text-blue-700 mb-4 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Contact
-          </button>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Book an Appointment</h1>
-          <p className="text-gray-600">Select a doctor and book your appointment</p>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white py-4">
+      <h2 className="text-3xl font-semibold text-green-900 text-center mb-2">Appointment</h2>
+      <h3 className="text-2xl font-normal text-green-800 text-center mb-4">If You Have Any Query, Please Contact Us</h3>
+      <div className="flex flex-col lg:flex-row items-center justify-center gap-10 w-full max-w-7xl mx-auto">
+        {/* Left Illustration */}
+        <div className="hidden lg:flex flex-1 items-center justify-center">
+          <img src="https://res.cloudinary.com/dknrega1a/image/upload/v1755272923/uploads/rput9xnctyvea5rguix6.jpg" alt="Doctor and patient" className="max-w-[420px] w-full h-auto" loading="lazy" />
         </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-          {/* Doctors Selection */}
-          <div className="xl:col-span-4">
-            <div className="bg-white rounded-lg shadow-sm h-fit">
-              <div className="p-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <User className="h-5 w-5 mr-2 text-blue-600" />
-                  Select Doctor
-                  {selectedDoctor && (
-                    <span className="ml-auto text-sm text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                      Selected
-                    </span>
-                  )}
-                </h2>
-              </div>
-
-              <div className="p-4">
-                {doctors.length === 0 ? (
-                  <div className="text-center py-8">
-                    <User className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                    <p className="text-gray-600">No doctors available</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {doctors.map((doctor) => (
-                      <div
-                        key={doctor.id}
-                        onClick={() => setSelectedDoctor(doctor)}
-                        className={`p-3 border rounded-lg cursor-pointer transition-all duration-200 ${selectedDoctor?.id === doctor.id
-                            ? 'border-blue-500 bg-blue-50 shadow-md'
-                            : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
-                          }`}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${selectedDoctor?.id === doctor.id ? 'bg-blue-100' : 'bg-gray-100'
-                            }`}>
-                            <User className={`h-4 w-4 ${selectedDoctor?.id === doctor.id ? 'text-blue-600' : 'text-gray-500'
-                              }`} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-gray-900 text-sm truncate">{doctor.full_name}</h3>
-                            <p className="text-xs text-gray-600 truncate">{doctor.specialization}</p>
-                            {doctor.consultation_fee && (
-                              <p className="text-xs text-green-600 font-medium">₹{doctor.consultation_fee}</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+        {/* Right Form Card */}
+        <div className="flex-1 w-full max-w-xl">
+          <div className="bg-white rounded-2xl shadow-lg p-8">
+            {/* <p className="text-gray-700 text-base mb-4">
+              Our dedicated team is here to provide expert care whenever you need it.<br />
+              Schedule your appointment easily and get the support you deserve—your health is our priority.
+            </p> */}
+            {/* --- FORM STARTS --- */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* ...existing code... */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Doctor */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Doctor</label>
+                  <select
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={selectedDoctor?.id || ''}
+                    onChange={e => {
+                      const doc = doctors.find(d => d.id == e.target.value);
+                      setSelectedDoctor(doc || null);
+                      setFormData({ ...formData, appointment_time: '' });
+                    }}
+                    required
+                  >
+                    <option value="">Select Doctor</option>
+                    {doctors.map(doc => (
+                      <option key={doc.id} value={doc.id}>
+                        Dr. {doc.full_name}{` (${doc.qualification})`} — {doc.specialization}
+                      </option>
                     ))}
-                  </div>
-                )}
+                  </select>
+                </div>
+                {/* Date */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                  <input
+                    type="date"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={formData.appointment_date}
+                    onChange={e => setFormData({ ...formData, appointment_date: e.target.value, appointment_time: '' })}
+                    min={getMinDate()}
+                    max={getMaxDate()}
+                    required
+                  />
+                </div>
               </div>
-            </div>
-          </div>
-
-          {/* Appointment Form */}
-          <div className="xl:col-span-8">
-            <div className="bg-white rounded-lg shadow-sm">
-              <div className="p-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <Calendar className="h-5 w-5 mr-2 text-blue-600" />
-                  Appointment Details
-                </h2>
-              </div>
-
-              <div className="p-4">
-                {!selectedDoctor ? (
-                  <div className="text-center py-12">
-                    <Calendar className="mx-auto h-16 w-16 text-gray-300 mb-4" />
-                    <p className="text-gray-500 text-lg">Please select a doctor first</p>
-                  </div>
-                ) : (
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Selected Doctor Info */}
-                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <User className="h-5 w-5 text-blue-600" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Time Slot */}
+                {formData.appointment_date && (
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Time Slots {formData?.appointment_time}</label>
+                    {!selectedDoctor ? (
+                      <div className="text-gray-400 text-sm py-2">Select Doctor to see slots</div>
+                    ) : slotsLoading ? (
+                      <div className="text-gray-400 text-sm py-2">Loading slots...</div>
+                    ) : availableSlots.length > 0 ? (
+                      <div className="border border-gray-200 rounded-lg p-3 max-h-48 overflow-y-auto">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                          {availableSlots.map((slot, idx) => {
+                            const timeValue = slot.fullTime || slot.time || slot.slot_time || slot;
+                            const status = slot.status || 'available';
+                            const isAvailable = status === 'available';
+                            const isSelected = formData.appointment_time === timeValue;
+                            return (
+                              <button
+                                key={slot.id || timeValue || idx}
+                                type="button"
+                                onClick={() => isAvailable && setFormData({ ...formData, appointment_time: timeValue })}
+                                disabled={!isAvailable}
+                                className={`relative p-2 border rounded-md text-xs text-center transition-all duration-200 overflow-hidden
+                                  ${isSelected
+                                    ? 'border-green-500 bg-green-50 text-green-900 shadow-md'
+                                    : isAvailable
+                                      ? 'border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700'
+                                      : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'}
+                                `}
+                              >
+                                {/* Large tick overlay for selected slot */}
+                                {isSelected && (
+                                  <span className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" fill="none" viewBox="0 0 38 38">
+                                      <circle cx="19" cy="19" r="18" fill="#22c55e" fillOpacity="0.15"/>
+                                      <path d="M12 20.5l5 5 9-9" stroke="#22c55e" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                  </span>
+                                )}
+                                <div className={`flex items-center justify-center gap-1 font-medium relative z-20 ${isSelected ? 'font-bold' : ''}`}>
+                                  {formatTime(timeValue)}
+                                </div>
+                                {status === 'break' && <div className="text-xs text-red-500 mt-1 relative z-20">Break</div>}
+                                {status === 'booked' && <div className="text-xs text-yellow-600 mt-1 relative z-20">Booked</div>}
+                                {status === 'unavailable' && <div className="text-xs text-red-500 mt-1 relative z-20">Full</div>}
+                                {isAvailable && <div className="text-xs text-green-600 mt-1 relative z-20">Available</div>}
+                              </button>
+                            );
+                          })}
                         </div>
-                        <div>
-                          <h3 className="font-medium text-gray-900">{selectedDoctor.full_name}</h3>
-                          <p className="text-sm text-gray-600">{selectedDoctor.specialization}</p>
-                          {selectedDoctor.consultation_fee && (
-                            <p className="text-sm text-green-600 font-medium">Fee: ₹{selectedDoctor.consultation_fee}</p>
-                          )}
-                        </div>
                       </div>
-                    </div>
-
-                    {/* Form Fields */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Full Name *
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.patient_name}
-                          onChange={(e) =>
-                            setFormData({ ...formData, patient_name: e.target.value })
-                          }
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          required
-                          placeholder="Enter your full name"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Email
-                        </label>
-                        <input
-                          type="email"
-                          value={formData.patient_email}
-                          onChange={(e) =>
-                            setFormData({ ...formData, patient_email: e.target.value })
-                          }
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Enter your email"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Phone Number
-                        </label>
-                        <input
-                          type="tel"
-                          value={formData.patient_phone}
-                          onChange={(e) =>
-                            setFormData({ ...formData, patient_phone: e.target.value })
-                          }
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Enter your phone number"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Appointment Date *
-                        </label>
-                        <input
-                          type="date"
-                          value={formData.appointment_date}
-                          onChange={(e) =>
-                            setFormData({ ...formData, appointment_date: e.target.value })
-                          }
-                          min={getMinDate()}
-                          max={getMaxDate()}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    {/* Time Slots */}
-                    {formData.appointment_date && selectedDoctor && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-3">
-                          Available Time Slots *
-                          {formData.appointment_time && (
-                            <span className="text-sm font-normal text-blue-600 ml-2">
-                              (Selected: {formatTime(formData.appointment_time)})
-                            </span>
-                          )}
-                        </label>
-
-                        {slotsLoading ? (
-                          <div className="text-center py-8">
-                            <Clock className="mx-auto h-8 w-8 text-gray-400 mb-2 animate-spin" />
-                            <p className="text-gray-600">Loading available slots...</p>
-                          </div>
-                        ) : availableSlots.length > 0 ? (
-                          <div className="border border-gray-200 rounded-lg p-4 max-h-64 overflow-y-auto">
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                              {availableSlots.map((slot, index) => {
-                                const timeValue = slot.fullTime || slot.time || slot.slot_time || slot;
-                                const status = slot.status || 'available';
-                                const isAvailable = status === 'available';
-                                const isSelected = formData.appointment_time === timeValue;
-
-                                return (
-                                  <button
-                                    key={slot.id || timeValue || index}
-                                    type="button"
-                                    onClick={() => {
-                                      if (isAvailable) {
-                                        setFormData({ ...formData, appointment_time: timeValue });
-                                      }
-                                    }}
-                                    disabled={!isAvailable}
-                                    className={`p-2 border rounded-md text-xs text-center transition-all duration-200 ${isSelected
-                                        ? 'border-blue-500 bg-blue-500 text-white shadow-md transform scale-105'
-                                        : isAvailable
-                                          ? 'border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700'
-                                          : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
-                                      }`}
-                                  >
-                                    <div className="font-medium">
-                                      {formatTime(timeValue)}
-                                    </div>
-                                    {status === 'break' && (
-                                      <div className="text-xs text-red-500 mt-1">Break</div>
-                                    )}
-                                    {status === 'booked' && (
-                                      <div className="text-xs text-yellow-600 mt-1">Booked</div>
-                                    )}
-                                    {status === 'unavailable' && (
-                                      <div className="text-xs text-red-500 mt-1">Full</div>
-                                    )}
-                                    {isAvailable && (
-                                      <div className="text-xs text-green-600 mt-1">Available</div>
-                                    )}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="text-center py-8 border border-gray-200 rounded-lg">
-                            <Clock className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                            <p className="text-gray-600">No available slots for this date</p>
-                          </div>
-                        )}
-                      </div>
+                    ) : (
+                      <div className="text-gray-400 text-sm py-2">No available slots for this date</div>
                     )}
-
-                    {/* Reason */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Reason for Visit
-                      </label>
-                      <textarea
-                        value={formData.reason}
-                        onChange={(e) =>
-                          setFormData({ ...formData, reason: e.target.value })
-                        }
-                        rows={3}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Please describe your symptoms or reason for visit..."
-                      />
-                    </div>
-
-                    {/* Submit Button */}
-                    <div className="pt-4 border-t border-gray-200">
-                      <button
-                        type="submit"
-                        disabled={loading || !selectedDoctor || !formData.appointment_time || !formData.patient_name.trim()}
-                        className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
-                      >
-                        {loading ? (
-                          <div className="flex items-center justify-center">
-                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                            Booking...
-                          </div>
-                        ) : (
-                          'Book Appointment'
-                        )}
-                      </button>
-                    </div>
-                  </form>
+                  </div>
                 )}
+
               </div>
-            </div>
+              {/* Name and Age */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Your Name</label>
+                  <input
+                    type="text"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Your Name"
+                    value={formData.patient_name}
+                    onChange={e => setFormData({ ...formData, patient_name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
+                  <select
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={formData.patient_age}
+                    onChange={e => setFormData({ ...formData, patient_age: e.target.value })}
+                    required
+                  >
+                    <option value="">Select Age</option>
+                    <option value="0-18">0-18</option>
+                    <option value="19-30">19-30</option>
+                    <option value="31-45">31-45</option>
+                    <option value="46-60">46-60</option>
+                    <option value="61+">61+</option>
+                  </select>
+                </div>
+              </div>
+              {/* Phone and Email */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Your Mobile</label>
+                  <input
+                    type="tel"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Your Mobile"
+                    value={formData.patient_phone}
+                    onChange={e => setFormData({ ...formData, patient_phone: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Your Email</label>
+                  <input
+                    type="email"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Your Email"
+                    value={formData.patient_email}
+                    onChange={e => setFormData({ ...formData, patient_email: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <textarea
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Message"
+                rows={3}
+                value={formData.reason}
+                onChange={e => setFormData({ ...formData, reason: e.target.value })}
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full border border-gray-700 text-gray-900 py-2 rounded-md hover:bg-gray-100 disabled:bg-gray-200 disabled:cursor-not-allowed font-medium transition-colors"
+              >
+                {loading ? 'Booking...' : 'Book An Appointment'}
+              </button>
+            </form>
+            {/* --- FORM ENDS --- */}
           </div>
         </div>
       </div>
